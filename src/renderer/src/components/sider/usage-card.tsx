@@ -92,24 +92,29 @@ const UsageCard: React.FC<Props> = (props) => {
                   className={`${match ? 'text-primary-foreground' : 'text-foreground'} text-[24px]`}
                 />
               </Button>
-              <div className={`p-2 w-full ${match ? 'text-primary-foreground' : 'text-foreground'}`}>
+              <div
+                className={`p-2 w-full ${match ? 'text-primary-foreground' : 'text-foreground'}`}
+              >
                 {providers.length === 0 ? (
                   <div className="text-xs text-foreground-400 leading-[32px]">—</div>
                 ) : (
                   providers.map((provider) => {
-                    const { Upload = 0, Download = 0, Total = 0, Expire } =
-                      provider.subscriptionInfo ?? {}
+                    const {
+                      Upload = 0,
+                      Download = 0,
+                      Total = 0,
+                      Expire
+                    } = provider.subscriptionInfo ?? {}
                     const used = Upload + Download
                     const percent = calcPercent(Upload, Download, Total)
                     const isExpired = Expire ? dayjs.unix(Expire).isBefore(dayjs()) : false
-                    const progressColor =
-                      isExpired
+                    const progressColor = isExpired
+                      ? 'danger'
+                      : percent >= 90
                         ? 'danger'
-                        : percent >= 90
-                          ? 'danger'
-                          : percent >= 70
-                            ? 'warning'
-                            : 'primary'
+                        : percent >= 70
+                          ? 'warning'
+                          : 'primary'
 
                     return (
                       <div key={provider.name} className="mb-2 last:mb-0">

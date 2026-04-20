@@ -65,7 +65,10 @@ export function useTrafficLogger(): void {
           downloadDelta = currentDownload
         }
 
-        connectionLastDataRef.current.set(conn.id, { upload: currentUpload, download: currentDownload })
+        connectionLastDataRef.current.set(conn.id, {
+          upload: currentUpload,
+          download: currentDownload
+        })
 
         if (uploadDelta === 0 && downloadDelta === 0) continue
 

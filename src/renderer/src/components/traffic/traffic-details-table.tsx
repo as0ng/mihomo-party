@@ -37,7 +37,8 @@ const TrafficDetailsTable: React.FC<Props> = ({
     const q = search.toLowerCase()
     const list = q ? subStats.filter((s) => s.label.toLowerCase().includes(q)) : [...subStats]
     return list.sort((a, b) => {
-      const cmp = sortField === 'label' ? a.label.localeCompare(b.label) : a[sortField] - b[sortField]
+      const cmp =
+        sortField === 'label' ? a.label.localeCompare(b.label) : a[sortField] - b[sortField]
       return sortAsc ? cmp : -cmp
     })
   }, [subStats, search, sortField, sortAsc])
@@ -48,7 +49,10 @@ const TrafficDetailsTable: React.FC<Props> = ({
 
   const handleSort = (field: SortField): void => {
     if (field === sortField) setSortAsc((v) => !v)
-    else { setSortField(field); setSortAsc(false) }
+    else {
+      setSortField(field)
+      setSortAsc(false)
+    }
   }
 
   const SortIcon: React.FC<{ field: SortField }> = ({ field }) => (
@@ -58,10 +62,13 @@ const TrafficDetailsTable: React.FC<Props> = ({
   )
 
   return (
-    <div className="flex h-[520px] flex-col overflow-hidden rounded-xl border border-foreground/10 bg-content1 shadow-sm">
+    <div className="flex h-130 flex-col overflow-hidden rounded-xl border border-foreground/10 bg-content1 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-foreground/5 bg-content2/50 px-4 py-2.5">
-        <span className="text-sm font-semibold text-foreground truncate max-w-[200px]" title={selectedRow}>
+        <span
+          className="text-sm font-semibold text-foreground truncate max-w-50"
+          title={selectedRow}
+        >
           {selectedRow}
         </span>
         <div className="flex-1" />
@@ -70,7 +77,10 @@ const TrafficDetailsTable: React.FC<Props> = ({
           className="w-52"
           placeholder={t('traffic.search')}
           value={search}
-          onValueChange={(v) => { setSearch(v); setPage(0) }}
+          onValueChange={(v) => {
+            setSearch(v)
+            setPage(0)
+          }}
           startContent={<IoSearch className="text-foreground/40" size={14} />}
           isClearable
         />
@@ -85,25 +95,29 @@ const TrafficDetailsTable: React.FC<Props> = ({
                 className="cursor-pointer px-4 py-2 text-left font-semibold text-foreground/60 uppercase tracking-wide hover:text-foreground"
                 onClick={() => handleSort('label')}
               >
-                {subColLabel}<SortIcon field="label" />
+                {subColLabel}
+                <SortIcon field="label" />
               </th>
               <th
                 className="hidden cursor-pointer px-4 py-2 text-left font-semibold text-foreground/60 uppercase tracking-wide hover:text-foreground lg:table-cell"
                 onClick={() => handleSort('upload')}
               >
-                {t('traffic.upload')}<SortIcon field="upload" />
+                {t('traffic.upload')}
+                <SortIcon field="upload" />
               </th>
               <th
                 className="hidden cursor-pointer px-4 py-2 text-left font-semibold text-foreground/60 uppercase tracking-wide hover:text-foreground lg:table-cell"
                 onClick={() => handleSort('download')}
               >
-                {t('traffic.download')}<SortIcon field="download" />
+                {t('traffic.download')}
+                <SortIcon field="download" />
               </th>
               <th
                 className="cursor-pointer px-4 py-2 text-right font-semibold text-foreground/60 uppercase tracking-wide hover:text-foreground lg:text-left"
                 onClick={() => handleSort('total')}
               >
-                {t('traffic.total')}<SortIcon field="total" />
+                {t('traffic.total')}
+                <SortIcon field="total" />
               </th>
             </tr>
           </thead>
@@ -114,24 +128,34 @@ const TrafficDetailsTable: React.FC<Props> = ({
               return (
                 <React.Fragment key={sub.label}>
                   <tr
-                    className={`cursor-pointer border-b border-foreground/5 transition-colors hover:bg-foreground/5 ${isExpanded ? 'bg-primary/10' : idx % 2 === 1 ? 'bg-foreground/[0.02]' : ''}`}
+                    className={`cursor-pointer border-b border-foreground/5 transition-colors hover:bg-foreground/5 ${isExpanded ? 'bg-primary/10' : idx % 2 === 1 ? 'bg-foreground/2' : ''}`}
                     onClick={() => onSubRowClick(selectedRow, sub.label)}
                   >
                     <td className="px-4 py-2">
                       <div className="flex items-center gap-1.5 font-mono">
-                        {isExpanded
-                          ? <IoChevronDown size={12} className="shrink-0 text-foreground/40" />
-                          : <IoChevronForward size={12} className="shrink-0 text-foreground/40" />}
-                        <span className="truncate max-w-[200px]" title={sub.label}>{sub.label}</span>
+                        {isExpanded ? (
+                          <IoChevronDown size={12} className="shrink-0 text-foreground/40" />
+                        ) : (
+                          <IoChevronForward size={12} className="shrink-0 text-foreground/40" />
+                        )}
+                        <span className="truncate max-w-50" title={sub.label}>
+                          {sub.label}
+                        </span>
                       </div>
                       <div className="mt-0.5 flex gap-3 pl-5 text-[10px] text-foreground/40 lg:hidden">
                         <span>↑ {calcTraffic(sub.upload)}</span>
                         <span>↓ {calcTraffic(sub.download)}</span>
                       </div>
                     </td>
-                    <td className="hidden px-4 py-2 text-foreground/70 lg:table-cell">{calcTraffic(sub.upload)}</td>
-                    <td className="hidden px-4 py-2 text-foreground/70 lg:table-cell">{calcTraffic(sub.download)}</td>
-                    <td className="px-4 py-2 text-right font-bold text-primary lg:text-left">{calcTraffic(sub.total)}</td>
+                    <td className="hidden px-4 py-2 text-foreground/70 lg:table-cell">
+                      {calcTraffic(sub.upload)}
+                    </td>
+                    <td className="hidden px-4 py-2 text-foreground/70 lg:table-cell">
+                      {calcTraffic(sub.download)}
+                    </td>
+                    <td className="px-4 py-2 text-right font-bold text-primary lg:text-left">
+                      {calcTraffic(sub.total)}
+                    </td>
                   </tr>
                   {isExpanded && (
                     <tr>
@@ -145,12 +169,17 @@ const TrafficDetailsTable: React.FC<Props> = ({
                                 key={item.label}
                                 className="flex flex-col gap-1 rounded-lg border border-foreground/10 bg-content2/50 p-2.5 text-[10px]"
                               >
-                                <span className="truncate font-mono font-bold text-secondary text-[10px]" title={item.label}>
+                                <span
+                                  className="truncate font-mono font-bold text-secondary text-[10px]"
+                                  title={item.label}
+                                >
                                   {item.label}
                                 </span>
                                 <div className="flex items-center justify-between border-b border-foreground/5 pb-1">
                                   <span className="text-foreground/40">×{item.count}</span>
-                                  <span className="font-black text-primary">{calcTraffic(item.total)}</span>
+                                  <span className="font-black text-primary">
+                                    {calcTraffic(item.total)}
+                                  </span>
                                 </div>
                                 <div className="flex justify-between text-foreground/50">
                                   <span>↑ {calcTraffic(item.upload)}</span>

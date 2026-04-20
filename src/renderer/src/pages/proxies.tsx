@@ -307,7 +307,7 @@ const Proxies: React.FC = () => {
                   <div className="text-ellipsis overflow-hidden whitespace-nowrap">
                     <div
                       title={groups[index].name}
-                      className="inline flag-emoji h-[32px] text-md leading-[32px]"
+                      className="inline flag-emoji h-8 text-md leading-8"
                     >
                       {groups[index].name}
                     </div>
@@ -385,7 +385,7 @@ const Proxies: React.FC = () => {
                     <MdOutlineSpeed className="text-lg text-foreground-500" />
                   </Button>
                   <IoIosArrowBack
-                    className={`transition duration-200 ml-2 h-[32px] text-lg text-foreground-500 ${isOpen[index] ? '-rotate-90' : ''}`}
+                    className={`transition duration-200 ml-2 h-8 text-lg text-foreground-500 ${isOpen[index] ? '-rotate-90' : ''}`}
                   />
                 </div>
               </div>

@@ -7,7 +7,7 @@ import * as chromeRequest from '../utils/chromeRequest'
 import { parse, stringify } from '../utils/yaml'
 import { defaultProfile } from '../utils/template'
 import { subStorePort } from '../resolve/server'
-import { mihomoHotReloadConfig } from '../core/mihomoApi'
+import { mihomoCloseAllConnections, mihomoHotReloadConfig } from '../core/mihomoApi'
 import { restartCore } from '../core/manager'
 import { addProfileUpdater, removeProfileUpdater } from '../core/profileUpdater'
 import { mihomoProfileWorkDir, mihomoWorkDir, profileConfigPath, profilePath } from '../utils/dirs'
@@ -79,9 +79,17 @@ export async function changeCurrentProfile(id: string): Promise<void> {
           config.current = id
           return config
         })
-        const { useHotReloadProfile = false } = await getAppConfig()
+        const { useHotReloadProfile = false, hotReloadProfileAutoCloseConnection = false } =
+          await getAppConfig()
         if (useHotReloadProfile) {
           await mihomoHotReloadConfig()
+          if (hotReloadProfileAutoCloseConnection) {
+            try {
+              await mihomoCloseAllConnections()
+            } catch (error) {
+              profileLogger.warn('Failed to close connections after profile hot reload', error)
+            }
+          }
         } else {
           await restartCore()
         }
@@ -269,7 +277,8 @@ export async function createProfile(item: Partial<IProfileItem>): Promise<IProfi
   // Remote
   if (!item.url) throw new Error('Empty URL')
 
-  const dedupKey = `${id}::${item.url}`
+  const profileUrl = item.url
+  const dedupKey = `${id}::${profileUrl}`
   const existing = inflightRemoteFetches.get(dedupKey)
   if (existing) return existing
 
@@ -282,7 +291,7 @@ export async function createProfile(item: Partial<IProfileItem>): Promise<IProfi
         : subscriptionTimeout
 
     const baseOptions: Omit<FetchOptions, 'useProxy' | 'timeout'> = {
-      url: item.url!,
+      url: profileUrl,
       mixedPort,
       userAgent: item.userAgent || userAgent || `mihomo.party/v${app.getVersion()} (clash.meta)`,
       authToken: item.authToken,
@@ -318,7 +327,7 @@ export async function createProfile(item: Partial<IProfileItem>): Promise<IProfi
     }
     if (headers['profile-update-interval'] && !item.allowFixedInterval) {
       // 拒绝等异常值
-      const ours = parseInt(headers['profile-update-interval'], 10)
+      const hours = parseInt(headers['profile-update-interval'], 10)
       if (Number.isFinite(hours) && hours > 0) {
         newItem.interval = hours * 60
       }

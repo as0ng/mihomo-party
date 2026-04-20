@@ -18,6 +18,7 @@ const MihomoConfig: React.FC = () => {
   const {
     diffWorkDir = false,
     useHotReloadProfile = false,
+    hotReloadProfileAutoCloseConnection = false,
     delayTestConcurrency,
     delayTestTimeout,
     githubToken = '',
@@ -238,6 +239,27 @@ const MihomoConfig: React.FC = () => {
           isSelected={useHotReloadProfile}
           onValueChange={(v) => {
             patchAppConfig({ useHotReloadProfile: v })
+          }}
+        />
+      </SettingItem>
+
+      <SettingItem
+        title={t('mihomo.hotReloadProfile.autoCloseConnection')}
+        actions={
+          <Tooltip content={t('mihomo.hotReloadProfile.autoCloseConnectionTooltip')}>
+            <Button isIconOnly size="sm" variant="light">
+              <IoIosHelpCircle className="text-lg" />
+            </Button>
+          </Tooltip>
+        }
+        divider
+      >
+        <Switch
+          size="sm"
+          isDisabled={!useHotReloadProfile}
+          isSelected={hotReloadProfileAutoCloseConnection}
+          onValueChange={(v) => {
+            patchAppConfig({ hotReloadProfileAutoCloseConnection: v })
           }}
         />
       </SettingItem>

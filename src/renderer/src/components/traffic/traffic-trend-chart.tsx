@@ -94,7 +94,7 @@ const TrafficTrendChart: React.FC<Props> = ({ data, bucketSizeMs }) => {
       },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label} ${calcTraffic(ctx.parsed.y)}`
+          label: (ctx) => ` ${ctx.dataset.label} ${calcTraffic(ctx.parsed.y ?? 0)}`
         }
       }
     },

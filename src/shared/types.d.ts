@@ -360,6 +360,7 @@ interface IAppConfig {
   enableTproxyPort?: boolean
   testProfileOnStart?: boolean
   useHotReloadProfile?: boolean
+  hotReloadProfileAutoCloseConnection?: boolean
 }
 
 interface IMihomoTunConfig {

@@ -60,7 +60,8 @@ export const defaultConfig: IAppConfig = {
   showTproxyPort: 0,
   enableTproxyPort: false,
   testProfileOnStart: true,
-  useHotReloadProfile: false
+  useHotReloadProfile: false,
+  hotReloadProfileAutoCloseConnection: false
 }
 
 export const defaultControledMihomoConfig: Partial<IMihomoConfig> = {

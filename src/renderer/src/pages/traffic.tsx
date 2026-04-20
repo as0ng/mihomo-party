@@ -13,7 +13,6 @@ import {
 } from '@renderer/utils/dataUsage'
 import { db } from '@renderer/utils/db'
 import { Button, Tab, Tabs } from '@heroui/react'
-import dayjs from '@renderer/utils/dayjs'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { calcTraffic } from '@renderer/utils/calc'
@@ -45,7 +44,9 @@ const TrafficPage: React.FC = () => {
   const [activeView, setActiveView] = useState<DataUsageType>('host')
   const [timeRange, setTimeRange] = useState<TimeRange>('24h')
   const [rankings, setRankings] = useState<AggregatedData[]>([])
-  const [trendData, setTrendData] = useState<{ timestamp: number; upload: number; download: number }[]>([])
+  const [trendData, setTrendData] = useState<
+    { timestamp: number; upload: number; download: number }[]
+  >([])
   const [selectedRow, setSelectedRow] = useState<string | null>(null)
   const [subStats, setSubStats] = useState<AggregatedData[]>([])
   const [proxyStatsMap, setProxyStatsMap] = useState<Record<string, AggregatedData[]>>({})
@@ -187,7 +188,9 @@ const TrafficPage: React.FC = () => {
               key={label}
               className="flex flex-col items-center rounded-xl border border-foreground/10 bg-content1 py-3 shadow-sm"
             >
-              <span className="text-[11px] text-foreground/50 uppercase tracking-wide">{label}</span>
+              <span className="text-[11px] text-foreground/50 uppercase tracking-wide">
+                {label}
+              </span>
               <span className="mt-0.5 text-sm font-bold text-foreground">{value}</span>
             </div>
           ))}
