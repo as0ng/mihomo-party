@@ -133,16 +133,34 @@ const DNS: React.FC = () => {
     setValues({ ...values, [type]: list })
   }
 
+  const getNameserverPolicy = (): IAppConfig['nameserverPolicy'] => {
+    if (!values.useNameserverPolicy) return {}
+
+    return Object.fromEntries(
+      values.nameserverPolicy.flatMap(({ domain, value }) => {
+        const key = domain.trim()
+        const nextValue = Array.isArray(value)
+          ? value.map((item) => item.trim()).filter(Boolean)
+          : value.trim()
+
+        if (!key || (Array.isArray(nextValue) ? nextValue.length === 0 : !nextValue)) return []
+        return [[key, nextValue]]
+      })
+    )
+  }
+
   const onSave = async (patch: Partial<IMihomoConfig>): Promise<void> => {
+    const nextNameserverPolicy = getNameserverPolicy()
     await patchAppConfig({
-      nameserverPolicy: Object.fromEntries(
-        values.nameserverPolicy.map(({ domain, value }) => [domain, value])
-      ),
+      nameserverPolicy: nextNameserverPolicy,
       useNameserverPolicy: values.useNameserverPolicy
     })
     try {
       setChanged(false)
-      await patchControledMihomoConfig(patch)
+      await patchControledMihomoConfig({
+        ...patch,
+        dns: patch.dns ? { ...patch.dns, 'nameserver-policy': nextNameserverPolicy } : patch.dns
+      })
       if (controlDns) {
         await mihomoHotReloadConfig()
       }

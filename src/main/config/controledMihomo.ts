@@ -14,26 +14,26 @@ const controledMihomoLogger = createLogger('ControledMihomo')
 let controledMihomoConfig: Partial<IMihomoConfig> // mihomo.yaml
 let controledMihomoWriteQueue: Promise<void> = Promise.resolve()
 
+function cloneDefaultControledMihomoConfig(): Partial<IMihomoConfig> {
+  return JSON.parse(JSON.stringify(defaultControledMihomoConfig)) as Partial<IMihomoConfig>
+}
+
 export async function getControledMihomoConfig(force = false): Promise<Partial<IMihomoConfig>> {
   if (force || !controledMihomoConfig) {
     if (existsSync(controledMihomoConfigPath())) {
       const data = await readFile(controledMihomoConfigPath(), 'utf-8')
-      controledMihomoConfig = parse(data) || defaultControledMihomoConfig
+      controledMihomoConfig = parse(data) || cloneDefaultControledMihomoConfig()
     } else {
-      controledMihomoConfig = defaultControledMihomoConfig
+      controledMihomoConfig = cloneDefaultControledMihomoConfig()
       try {
-        await writeFile(
-          controledMihomoConfigPath(),
-          stringify(defaultControledMihomoConfig),
-          'utf-8'
-        )
+        await writeFile(controledMihomoConfigPath(), stringify(controledMihomoConfig), 'utf-8')
       } catch (error) {
         controledMihomoLogger.error('Failed to create mihomo.yaml file', error)
       }
     }
 
     // 确保配置包含所有必要的默认字段，处理升级场景
-    controledMihomoConfig = deepMerge(defaultControledMihomoConfig, controledMihomoConfig)
+    controledMihomoConfig = deepMerge(cloneDefaultControledMihomoConfig(), controledMihomoConfig)
 
     // 清理端口字段中的 NaN 值，恢复为默认值
     const portFields = ['mixed-port', 'socks-port', 'port', 'redir-port', 'tproxy-port'] as const
@@ -47,7 +47,7 @@ export async function getControledMihomoConfig(force = false): Promise<Partial<I
     }
   }
   if (typeof controledMihomoConfig !== 'object')
-    controledMihomoConfig = defaultControledMihomoConfig
+    controledMihomoConfig = cloneDefaultControledMihomoConfig()
   return controledMihomoConfig
 }
 
@@ -80,17 +80,21 @@ export async function patchControledMihomoConfig(patch: Partial<IMihomoConfig>):
     if (patch.hosts) {
       controledMihomoConfig.hosts = patch.hosts
     }
-    if (patch.dns?.['nameserver-policy']) {
-      controledMihomoConfig.dns = controledMihomoConfig.dns || {}
-      controledMihomoConfig.dns['nameserver-policy'] = patch.dns['nameserver-policy']
-    }
+    const replaceNameserverPolicy = Object.prototype.hasOwnProperty.call(
+      patch.dns || {},
+      'nameserver-policy'
+    )
     controledMihomoConfig = deepMerge(controledMihomoConfig, patch)
+    if (replaceNameserverPolicy) {
+      controledMihomoConfig.dns = controledMihomoConfig.dns || {}
+      controledMihomoConfig.dns['nameserver-policy'] = patch.dns?.['nameserver-policy'] ?? {}
+    }
 
     // 从不接管状态恢复
     if (controlDns) {
       // 确保 DNS 配置包含所有必要的默认字段，特别是新增的 fallback 等
       controledMihomoConfig.dns = deepMerge(
-        defaultControledMihomoConfig.dns || {},
+        cloneDefaultControledMihomoConfig().dns || {},
         controledMihomoConfig.dns || {}
       )
     }
