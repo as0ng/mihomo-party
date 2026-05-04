@@ -96,6 +96,8 @@
   "settings.customTrayIcon": "Пользовательский значок в трее",
   "settings.customTrayIconTooltip": "Если задано, трей всегда использует этот значок. Состояние системного прокси, TUN и режима указано в подсказке трея.",
   "settings.customTrayIconSelect": "Выбрать значок трея",
+  "settings.cropTrayIcon": "Обрезать значок трея",
+  "settings.customTrayIconBase64": "Обрезанный значок сохранен",
   "settings.selectTrayIcon": "Выбрать значок",
   "settings.changeTrayIcon": "Изменить значок",
   "settings.disableAnimations": "Отключить анимационные эффекты",

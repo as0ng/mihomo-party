@@ -15,6 +15,7 @@ import {
   getFilePath,
   importThemes,
   relaunchApp,
+  readImageFileDataURL,
   resolveThemes,
   showFloatingWindow,
   showTrayIcon,
@@ -33,6 +34,9 @@ import SettingItem from '../base/base-setting-item'
 import SettingCard from '../base/base-setting-card'
 import BaseConfirmModal from '../base/base-confirm-modal'
 import CSSEditorModal from './css-editor-modal'
+import TrayIconCropModal from './tray-icon-crop-modal'
+
+const rasterTrayIconPattern = /\.(png|jpe?g|webp)$/i
 
 const GeneralConfig: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -42,6 +46,7 @@ const GeneralConfig: React.FC = () => {
   const [openCSSEditor, setOpenCSSEditor] = useState(false)
   const [fetching, setFetching] = useState(false)
   const [isRelaunching, setIsRelaunching] = useState(false)
+  const [trayIconCropDataURL, setTrayIconCropDataURL] = useState('')
   const [showHardwareAccelConfirm, setShowHardwareAccelConfirm] = useState(false)
   const [pendingHardwareAccelValue, setPendingHardwareAccelValue] = useState(false)
   const { setTheme } = useTheme()
@@ -112,6 +117,17 @@ const GeneralConfig: React.FC = () => {
               toast.error(String(e))
               setIsRelaunching(false)
             }
+          }}
+        />
+      )}
+      {trayIconCropDataURL && (
+        <TrayIconCropModal
+          imageDataURL={trayIconCropDataURL}
+          onCancel={() => setTrayIconCropDataURL('')}
+          onConfirm={async (dataURL) => {
+            await patchAppConfig({ customTrayIcon: dataURL })
+            setTrayIconCropDataURL('')
+            await updateTrayIcon()
           }}
         />
       )}
@@ -383,8 +399,17 @@ const GeneralConfig: React.FC = () => {
             >
               <div className="flex items-center justify-end gap-2 min-w-0 max-w-[65%]">
                 {customTrayIcon && (
-                  <span className="truncate text-xs text-default-500" title={customTrayIcon}>
-                    {customTrayIcon}
+                  <span
+                    className="truncate text-xs text-default-500"
+                    title={
+                      customTrayIcon.startsWith('data:image/')
+                        ? t('settings.customTrayIconBase64')
+                        : customTrayIcon
+                    }
+                  >
+                    {customTrayIcon.startsWith('data:image/')
+                      ? t('settings.customTrayIconBase64')
+                      : customTrayIcon}
                   </span>
                 )}
                 <Button
@@ -392,11 +417,15 @@ const GeneralConfig: React.FC = () => {
                   variant="flat"
                   onPress={async () => {
                     const files = await getFilePath(
-                      ['png', 'jpg', 'jpeg', 'ico', 'icns'],
+                      ['png', 'jpg', 'jpeg', 'webp', 'ico', 'icns'],
                       t('settings.customTrayIconSelect'),
                       t('settings.customTrayIcon')
                     )
                     if (!files?.[0]) return
+                    if (rasterTrayIconPattern.test(files[0])) {
+                      setTrayIconCropDataURL(await readImageFileDataURL(files[0]))
+                      return
+                    }
                     await patchAppConfig({ customTrayIcon: files[0] })
                     await updateTrayIcon()
                   }}

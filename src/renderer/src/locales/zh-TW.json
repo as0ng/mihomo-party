@@ -99,6 +99,8 @@
   "settings.customTrayIcon": "自定義托盤圖標",
   "settings.customTrayIconTooltip": "啟用後托盤將始終使用此圖標；系統代理、TUN 和模式狀態改由托盤 Tooltip 標註。",
   "settings.customTrayIconSelect": "選擇托盤圖標",
+  "settings.cropTrayIcon": "裁剪托盤圖標",
+  "settings.customTrayIconBase64": "已儲存裁剪圖標",
   "settings.selectTrayIcon": "選擇圖標",
   "settings.changeTrayIcon": "更換圖標",
   "settings.disableAnimations": "禁用動畫效果",

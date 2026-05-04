@@ -67,6 +67,7 @@ const validInvokeChannels = [
   'setRuleStr',
   'getFilePath',
   'readTextFile',
+  'readImageFileDataURL',
   'openFile',
   // Core
   'restartCore',

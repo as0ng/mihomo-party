@@ -94,6 +94,8 @@
   "settings.customTrayIcon": "آیکون سفارشی سیستم‌تری",
   "settings.customTrayIconTooltip": "وقتی تنظیم شود، تری همیشه از این آیکون استفاده می‌کند. وضعیت پروکسی سیستم، TUN و حالت در راهنمای تری نمایش داده می‌شود.",
   "settings.customTrayIconSelect": "انتخاب آیکون تری",
+  "settings.cropTrayIcon": "برش آیکون تری",
+  "settings.customTrayIconBase64": "آیکون برش‌خورده ذخیره شد",
   "settings.selectTrayIcon": "انتخاب آیکون",
   "settings.changeTrayIcon": "تغییر آیکون",
   "settings.disableAnimations": "غیرفعال کردن جلوه‌های انیمیشن",

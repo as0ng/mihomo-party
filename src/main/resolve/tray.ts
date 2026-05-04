@@ -1,4 +1,5 @@
 import { existsSync } from 'fs'
+import { extname } from 'path'
 import { app, clipboard, ipcMain, Menu, nativeImage, shell, Tray } from 'electron'
 import { t } from 'i18next'
 import {
@@ -43,6 +44,9 @@ export let tray: Tray | null = null
 // macOS 流量显示状态，避免异步读取配置导致的时序问题
 let macTrafficIconEnabled = false
 type TrayIconStatus = 'white' | 'blue' | 'green' | 'red'
+type TrayImage = Electron.NativeImage | string
+const customTrayIconSize = 16
+const customTrayIconScaleFactors = [1, 1.25, 1.5, 2, 2.5, 3]
 
 export const buildContextMenu = async (): Promise<Menu> => {
   // 添加调试日志
@@ -568,13 +572,57 @@ const getIconPaths = (): Record<TrayIconStatus, string> => {
   }
 }
 
-function createCustomTrayImage(customTrayIcon: string): Electron.NativeImage | null {
-  if (!customTrayIcon || !existsSync(customTrayIcon)) return null
+function resizeTrayImageForScale(
+  icon: Electron.NativeImage,
+  scaleFactor: number
+): Electron.NativeImage {
+  const targetHeight = Math.round(customTrayIconSize * scaleFactor)
+
+  return icon.resize({ height: targetHeight, quality: 'best' })
+}
+
+function createMultiScaleTrayImage(icon: Electron.NativeImage): Electron.NativeImage {
+  const trayImage = nativeImage.createEmpty()
+
+  for (const scaleFactor of customTrayIconScaleFactors) {
+    const resizedIcon = resizeTrayImageForScale(icon, scaleFactor)
+    if (resizedIcon.isEmpty()) continue
+
+    trayImage.addRepresentation({
+      scaleFactor,
+      buffer: resizedIcon.toPNG()
+    })
+  }
+
+  if (!trayImage.isEmpty()) return trayImage
+
+  return resizeTrayImageForScale(icon, 1)
+}
+
+function createCustomTrayImage(customTrayIcon: string): TrayImage | null {
+  if (!customTrayIcon) return null
+
+  if (customTrayIcon.startsWith('data:image/')) {
+    const icon = nativeImage.createFromDataURL(customTrayIcon)
+    if (icon.isEmpty()) return null
+
+    return createMultiScaleTrayImage(icon)
+  }
+
+  if (!existsSync(customTrayIcon)) return null
 
   const icon = nativeImage.createFromPath(customTrayIcon)
   if (icon.isEmpty()) return null
 
-  return icon.resize({ height: 16 })
+  const iconExt = extname(customTrayIcon).toLowerCase()
+  if (process.platform === 'win32' && iconExt === '.ico') {
+    return customTrayIcon
+  }
+  if (process.platform === 'linux') {
+    return customTrayIcon
+  }
+
+  return createMultiScaleTrayImage(icon)
 }
 
 async function updateTrayToolTip(

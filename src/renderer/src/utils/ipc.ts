@@ -79,6 +79,7 @@ interface IpcApi {
   setRuleStr: (id: string, str: string) => Promise<void>
   getFilePath: (ext: string[], title?: string, filterName?: string) => Promise<string[] | undefined>
   readTextFile: (filePath: string) => Promise<string>
+  readImageFileDataURL: (filePath: string) => Promise<string>
   openFile: (type: 'profile' | 'override', id: string, ext?: 'yaml' | 'js') => Promise<void>
   // Core
   restartCore: () => Promise<void>
@@ -236,6 +237,7 @@ export const {
   setRuleStr,
   getFilePath,
   readTextFile,
+  readImageFileDataURL,
   openFile,
   // Core
   restartCore,

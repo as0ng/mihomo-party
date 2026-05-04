@@ -99,6 +99,8 @@
   "settings.customTrayIcon": "Custom Tray Icon",
   "settings.customTrayIconTooltip": "When set, the tray always uses this icon. System proxy, TUN, and mode state are annotated in the tray tooltip.",
   "settings.customTrayIconSelect": "Select Tray Icon",
+  "settings.cropTrayIcon": "Crop Tray Icon",
+  "settings.customTrayIconBase64": "Cropped icon stored",
   "settings.selectTrayIcon": "Select Icon",
   "settings.changeTrayIcon": "Change Icon",
   "settings.disableAnimations": "Disable Animation Effects",

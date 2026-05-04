@@ -30,6 +30,21 @@ export async function readTextFile(filePath: string): Promise<string> {
   return await readFile(filePath, 'utf8')
 }
 
+export async function readImageFileDataURL(filePath: string): Promise<string> {
+  const ext = path.extname(filePath).toLowerCase()
+  const mimeType =
+    ext === '.jpg' || ext === '.jpeg'
+      ? 'image/jpeg'
+      : ext === '.webp'
+        ? 'image/webp'
+        : ext === '.gif'
+          ? 'image/gif'
+          : 'image/png'
+  const data = await readFile(filePath)
+
+  return `data:${mimeType};base64,${data.toString('base64')}`
+}
+
 export function openFile(type: 'profile' | 'override', id: string, ext?: 'yaml' | 'js'): void {
   if (type === 'profile') {
     shell.openPath(profilePath(id))
