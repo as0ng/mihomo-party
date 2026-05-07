@@ -25,7 +25,7 @@ import {
 } from '../utils/dirs'
 import { uploadRuntimeConfig } from '../resolve/gistApi'
 import { startMonitor } from '../resolve/trafficMonitor'
-import { safeShowErrorBox } from '../utils/init'
+import { ensureRuntimeFiles, safeShowErrorBox } from '../utils/init'
 import i18next from '../../shared/i18n'
 import { managerLogger } from '../utils/logger'
 import { createCappedLogWritableStream } from '../utils/logFile'
@@ -77,12 +77,16 @@ const execFilePromise = promisify(execFile)
 const ctlParam = process.platform === 'win32' ? '-ext-ctl-pipe' : '-ext-ctl-unix'
 
 // 核心进程状态
-let child: ChildProcess
+let child: ChildProcess | null = null
 let retry = 10
 let isRestarting = false
 
 // 文件监听器
 let coreWatcher: FSWatcher | null = null
+
+function hasCoreProcess(): boolean {
+  return Boolean(child && !child.killed && child.exitCode === null && child.signalCode === null)
+}
 
 // 初始化核心文件监听
 export function initCoreWatcher(): void {
@@ -147,6 +151,8 @@ interface CoreConfig {
 
 // 准备核心配置
 async function prepareCore(detached: boolean, skipStop = false): Promise<CoreConfig> {
+  await ensureRuntimeFiles()
+
   const [appConfig, mihomoConfig] = await Promise.all([getAppConfig(), getControledMihomoConfig()])
 
   const {
@@ -177,7 +183,7 @@ async function prepareCore(detached: boolean, skipStop = false): Promise<CoreCon
   // generateProfile 返回实际使用的 current
   const current = await generateProfile()
   await checkProfile(current, core, diffWorkDir)
-  if (!skipStop) {
+  if (!skipStop && hasCoreProcess()) {
     await stopCore()
   }
   await cleanupSocketFile()
@@ -246,6 +252,10 @@ function setupCoreListeners(
 ): void {
   proc.on('close', async (code, signal) => {
     managerLogger.info(`Core closed, code: ${code}, signal: ${signal}`)
+
+    if (child === proc) {
+      child = null
+    }
 
     if (isRestarting) {
       managerLogger.info('Core closed during restart, skipping auto-restart')
@@ -338,18 +348,19 @@ function setupCoreListeners(
 // 启动核心
 export async function startCore(detached = false, skipStop = false): Promise<Promise<void>[]> {
   const config = await prepareCore(detached, skipStop)
-  child = spawnCoreProcess(config)
+  const proc = spawnCoreProcess(config)
+  child = proc
 
   if (detached) {
     managerLogger.info(
-      `Core process detached successfully on ${process.platform}, PID: ${child.pid}`
+      `Core process detached successfully on ${process.platform}, PID: ${proc.pid}`
     )
-    child.unref()
+    proc.unref()
     return [new Promise(() => {})]
   }
 
   return new Promise((resolve, reject) => {
-    setupCoreListeners(child, config.logLevel, resolve, reject)
+    setupCoreListeners(proc, config.logLevel, resolve, reject)
   })
 }
 
@@ -366,6 +377,7 @@ export async function stopCore(force = false): Promise<void> {
   if (child) {
     child.removeAllListeners()
     child.kill('SIGINT')
+    child = null
   }
 
   stopMihomoTraffic()

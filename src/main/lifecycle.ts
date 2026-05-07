@@ -58,21 +58,53 @@ export function setupPlatformSpecifics(): void {
 
 export function setupAppLifecycle(): void {
   let sysProxyDisabled = false
+  let isQuitting = false
+
+  const withTimeout = async (promise: Promise<void>, timeout: number): Promise<void> => {
+    let timeoutId: NodeJS.Timeout | null = null
+
+    try {
+      await Promise.race([
+        promise,
+        new Promise<void>((resolve) => {
+          timeoutId = setTimeout(resolve, timeout)
+        })
+      ])
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }
+
+  const cleanupBeforeExit = async (): Promise<void> => {
+    if (isQuitting) return
+    isQuitting = true
+
+    cleanupCoreWatcher()
+
+    if (process.platform !== 'darwin') {
+      disableSysProxySync()
+      sysProxyDisabled = true
+    }
+
+    await withTimeout(
+      Promise.allSettled([
+        triggerSysProxy(false).then(() => {
+          sysProxyDisabled = true
+        }),
+        stopCore()
+      ]).then(() => {}),
+      3000
+    )
+  }
 
   app.on('before-quit', async (e) => {
     e.preventDefault()
-    cleanupCoreWatcher()
-    await triggerSysProxy(false)
-    sysProxyDisabled = true
-    await stopCore()
+    await cleanupBeforeExit()
     app.exit()
   })
 
   powerMonitor.on('shutdown', async () => {
-    cleanupCoreWatcher()
-    await triggerSysProxy(false)
-    sysProxyDisabled = true
-    await stopCore()
+    await cleanupBeforeExit()
     app.exit()
   })
 

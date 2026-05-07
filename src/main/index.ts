@@ -1,4 +1,4 @@
-import { execSync } from 'child_process'
+import { execFileSync, execSync } from 'child_process'
 import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { app, dialog } from 'electron'
 import i18next from 'i18next'
@@ -37,14 +37,33 @@ import {
   getSystemLanguage
 } from './lifecycle'
 
+function getWindowsPowerShellMajorVersion(): number | null {
+  const registryKeys = [
+    'HKLM\\SOFTWARE\\Microsoft\\PowerShell\\3\\PowerShellEngine',
+    'HKLM\\SOFTWARE\\Microsoft\\PowerShell\\1\\PowerShellEngine'
+  ]
+
+  for (const key of registryKeys) {
+    try {
+      const stdout = execFileSync('reg', ['query', key, '/v', 'PowerShellVersion'], {
+        encoding: 'utf8',
+        timeout: 1000
+      })
+      const version = stdout.match(/PowerShellVersion\s+REG_\w+\s+([^\s]+)/)?.[1]
+      const major = version ? parseInt(version.split('.')[0], 10) : NaN
+      if (!isNaN(major)) return major
+    } catch {
+      // try next registry key
+    }
+  }
+
+  return null
+}
+
 if (process.platform === 'win32') {
   try {
-    const stdout = execSync('powershell -NoProfile -Command "$PSVersionTable.PSVersion.Major"', {
-      encoding: 'utf8',
-      timeout: 5000
-    })
-    const major = parseInt(stdout.trim(), 10)
-    if (!isNaN(major) && major < 5) {
+    const major = getWindowsPowerShellMajorVersion()
+    if (major !== null && major < 5) {
       const isZh = Intl.DateTimeFormat().resolvedOptions().locale?.startsWith('zh')
       const title = isZh ? '需要更新 PowerShell' : 'PowerShell Update Required'
       const message = isZh
@@ -159,7 +178,6 @@ const initPromise = (async () => {
   await initAdminStatus()
 
   try {
-    await init()
     const appConfig = await getAppConfig()
     if (!appConfig.language) {
       const systemLanguage = getSystemLanguage()
@@ -187,6 +205,9 @@ app.whenReady().then(async () => {
   registerIpcMainHandlers()
 
   const createWindowPromise = createWindow()
+  const runtimeInitPromise = init().catch((error) => {
+    mainLogger.error('Failed to initialize background services', error)
+  })
 
   let coreStarted = false
   const coreStartPromise = (async (): Promise<void> => {
@@ -236,6 +257,7 @@ app.whenReady().then(async () => {
   }
 
   await Promise.all(uiTasks)
+  void runtimeInitPromise
   await Promise.all([coreStartPromise, monitorPromise])
 
   if (coreStarted) {
